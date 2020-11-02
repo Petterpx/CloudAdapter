@@ -1,0 +1,4 @@
+include ':paging'
+include ':app'
+include ':core'
+rootProject.name = "CloudRvAdapter"
