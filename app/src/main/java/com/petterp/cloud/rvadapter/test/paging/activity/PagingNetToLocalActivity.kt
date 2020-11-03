@@ -8,8 +8,9 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.petterp.cloud.rvadapter.R
 import com.petterp.cloud.rvadapter.test.paging.adapter.PagingBookAdapter
+import com.petterp.cloud.rvadapter.test.paging.viewmodel.PagingViewModel
 import kotlinx.android.synthetic.main.activity_adater.*
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -29,8 +30,9 @@ class PagingNetToLocalActivity : AppCompatActivity() {
         val adapter = PagingBookAdapter()
         rvMain.adapter = adapter
         rvMain.layoutManager = LinearLayoutManager(this)
+
         lifecycleScope.launch {
-            viewModel.initNetToLocal().collect {
+            viewModel.initNetToLocal().collectLatest {
                 adapter.submitData(it)
             }
         }

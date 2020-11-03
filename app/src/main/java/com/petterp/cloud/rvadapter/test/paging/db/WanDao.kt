@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.petterp.cloud.rvadapter.test.net.WanListBean
+import com.petterp.cloud.rvadapter.test.paging.PokemonEntity
 
 /**
  * @Author petterp
@@ -17,10 +18,10 @@ import com.petterp.cloud.rvadapter.test.net.WanListBean
 interface WanDao {
 
     @Query("SELECT * FROM wan")
-    suspend fun queryPage(): PagingSource<Int, WanListBean.Data>
+    fun queryPage(): PagingSource<Int, PokemonEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(repos: List<WanListBean.Data>)
+    suspend fun insertAll(repos: List<PokemonEntity>)
 
     @Query("DELETE FROM wan")
     suspend fun clearRepos()

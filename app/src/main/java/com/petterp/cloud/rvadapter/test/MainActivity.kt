@@ -7,6 +7,7 @@ import com.petterp.cloud.rvadapter.R
 import com.petterp.cloud.rvadapter.test.routine.activity.AdapterActivity
 import com.petterp.cloud.rvadapter.test.routine.activity.AdapterMultiltemActivity
 import com.petterp.cloud.rvadapter.test.paging.activity.PagingActivity
+import com.petterp.cloud.rvadapter.test.paging.activity.PagingNetToLocalActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -24,6 +25,9 @@ class MainActivity : AppCompatActivity() {
 
         btnPagingType.setOnClickListener {
 
+        }
+        btnPagingNetToLocal.setOnClickListener {
+            startActivity(Intent(this, PagingNetToLocalActivity::class.java))
         }
         btnPagingAdapter.setOnClickListener {
             startActivity(Intent(this, PagingActivity::class.java))

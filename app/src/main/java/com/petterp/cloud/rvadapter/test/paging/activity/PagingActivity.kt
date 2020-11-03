@@ -7,8 +7,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.petterp.cloud.rvadapter.R
 import com.petterp.cloud.rvadapter.test.paging.adapter.PagingBookAdapter
+import com.petterp.cloud.rvadapter.test.paging.viewmodel.PagingViewModel
 import kotlinx.android.synthetic.main.activity_adater.*
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -21,6 +23,7 @@ class PagingActivity : AppCompatActivity() {
 
     private val viewModel by viewModels<PagingViewModel>()
 
+    @InternalCoroutinesApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_adater)
@@ -28,7 +31,7 @@ class PagingActivity : AppCompatActivity() {
         rvMain.adapter = adapter
         rvMain.layoutManager = LinearLayoutManager(this)
         lifecycleScope.launch {
-            viewModel.initList().collect {
+            viewModel.initList().collectLatest {
                 adapter.submitData(it)
             }
         }

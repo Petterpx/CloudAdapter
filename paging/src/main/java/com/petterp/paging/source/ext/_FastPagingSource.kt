@@ -1,4 +1,4 @@
-package com.petterp.paging.source.ktx
+package com.petterp.paging.source.ext
 
 import androidx.paging.*
 import com.petterp.paging.source.config.RvPagingConfig
@@ -50,26 +50,27 @@ fun <Key : Any, Value : Any> createPager(
     }
 }
 
+
+/** 网络判断密封类 */
+sealed class StatusRvData {
+    data class Success<Bean : Any>(val data: List<Bean>) : StatusRvData()
+    data class Error(val throwable: Throwable) : StatusRvData()
+}
+
 /**
  * [defaultIndex] 默认页数
  * [obj] 触发网络回调
  * */
 inline fun <reified Bean : Any> createIndexPagingSource(
     defaultIndex: Int = 0,
-    noinline obj: suspend (Int) -> CloudNetData,
+    noinline obj: suspend (Int) -> StatusRvData,
 ): PagingSource<Int, Bean> {
     return IndexPagingSource<Bean>(obj, defaultIndex)
 }
 
-/** 网络判断密封类 */
-sealed class CloudNetData {
-    data class Success<Bean : Any>(val data: List<Bean>) : CloudNetData()
-    data class Error(val throwable: Throwable) : CloudNetData()
-}
-
 /** 按页加载的PagingSource */
 class IndexPagingSource<Bean : Any>(
-    private val obj: suspend (Int) -> CloudNetData,
+    private val obj: suspend (Int) -> StatusRvData,
     private val defaultIndex: Int
 ) :
     PagingSource<Int, Bean>() {
@@ -77,14 +78,14 @@ class IndexPagingSource<Bean : Any>(
         val key = params.key
         val position = key ?: defaultIndex
         val data = obj(position)
-        return if (data is CloudNetData.Success<*>) {
+        return if (data is StatusRvData.Success<*>) {
             LoadResult.Page(
                 data = data.data as List<Bean>,
                 prevKey = if (position == defaultIndex) null else position - 1,
                 nextKey = if (data.data.isEmpty()) null else position + 1
             )
         } else {
-            LoadResult.Error((data as CloudNetData.Error).throwable)
+            LoadResult.Error((data as StatusRvData.Error).throwable)
         }
     }
 

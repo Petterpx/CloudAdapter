@@ -21,6 +21,7 @@
         <activity android:name=".test.routine.activity.AdapterActivity" />
         <activity android:name=".test.routine.activity.AdapterMultiltemActivity" />
         <activity android:name=".test.paging.activity.PagingActivity" />
+        <activity android:name=".test.paging.activity.PagingNetToLocalActivity" />
     </application>
 
 </manifest>

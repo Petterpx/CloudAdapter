@@ -1,14 +1,16 @@
 package com.petterp.cloud.rvadapter.test.paging.datasource
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
+import com.petterp.cloud.rvadapter.test.KtxApplication
 import com.petterp.cloud.rvadapter.test.net.ApiServiceImpl
-import com.petterp.cloud.rvadapter.test.net.WanListBean
-import com.petterp.cloud.rvadapter.test.paging.db.WanDataBase
+import com.petterp.cloud.rvadapter.test.paging.PokemonEntity
 import com.petterp.cloud.rvadapter.test.paging.db.WanDb
+import com.petterp.paging.source.ext.isConnectedNetwork
 
 /**
  * @Author petterp
@@ -16,34 +18,56 @@ import com.petterp.cloud.rvadapter.test.paging.db.WanDb
  * @Email ShiyihuiCloud@163.com
  * @Function
  */
-@ExperimentalPagingApi
-class BookRemoteMediator : RemoteMediator<Int, WanListBean.Data>() {
-    var position = 0
-    override suspend fun load(loadType: LoadType, state: PagingState<Int, WanListBean.Data>): MediatorResult {
-        when (loadType) {
-            // TODO: 2020/10/30 初始化刷新
+@OptIn(ExperimentalPagingApi::class)
+class BookRemoteMediator : RemoteMediator<Int, PokemonEntity>() {
+    override suspend fun load(
+        loadType: LoadType,
+        state: PagingState<Int, PokemonEntity>
+    ): MediatorResult {
+        var page = when (loadType) {
+            // TODO: 2020/10/30 首次访问，或者调用 PagingDataAdapter.refresh() 时调用
             LoadType.REFRESH -> {
-                WanDb.dao.wanDao().clearRepos()
-                position = 0
-                return MediatorResult.Success(endOfPaginationReached = true)
+                null
             }
 
-            // TODO: 2020/10/30 列表头部添加数据
+            // TODO: 2020/10/30 在当前加载的数据集的开头加载数据时调用,[endOfPaginationReached]是否还有数据
             LoadType.PREPEND -> {
                 return MediatorResult.Success(endOfPaginationReached = true)
             }
 
-            // TODO: 2020/10/30 加载更多
             LoadType.APPEND -> {
-                ++position
+                state.lastItemOrNull()?.page
+                    ?: return MediatorResult.Success(endOfPaginationReached = true)
             }
+        } ?: 0
+
+        if (!KtxApplication.context.isConnectedNetwork()) {
+            Log.e("petterpx", "无网络")
+            // 无网络加载本地数据
+            return MediatorResult.Success(endOfPaginationReached = true)
         }
+
+        //加载网络数据
+        Log.e("petterpx", "当前type${loadType.name}+$page")
         return try {
-            val data = ApiServiceImpl.apiService.getMainList(position).data.datas
-            WanDb.dao.withTransaction {
-                WanDb.dao.wanDao().insertAll(data)
+            val data = ApiServiceImpl.apiService.getMainList(page).data.datas.also {
+                ++page
+            }.map {
+                PokemonEntity(
+                    it.id.toString(),
+                    it.title,
+                    page
+                )
             }
-            MediatorResult.Success(endOfPaginationReached = true)
+            WanDb.dao.apply {
+                withTransaction {
+                    if (loadType == LoadType.REFRESH) {
+                        this.wanDao().clearRepos()
+                    }
+                    this.wanDao().insertAll(data)
+                }
+            }
+            MediatorResult.Success(endOfPaginationReached = data.isEmpty())
         } catch (e: Exception) {
             MediatorResult.Error(e)
         }

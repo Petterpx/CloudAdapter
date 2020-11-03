@@ -4,6 +4,7 @@ package com.petterp.cloud.rvadapter.test.net
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
+
 data class WanListBean(
     @SerializedName("curPage")
     val curPage: Int,
@@ -20,7 +21,6 @@ data class WanListBean(
     @SerializedName("total")
     val total: Int
 ) {
-    @Entity(tableName = "wan")
     data class Data(
         @SerializedName("apkLink")
         val apkLink: String,
@@ -30,7 +30,6 @@ data class WanListBean(
         val author: String,
         @SerializedName("canEdit")
         val canEdit: Boolean,
-        @PrimaryKey
         @SerializedName("chapterId")
         val chapterId: Int,
         @SerializedName("chapterName")
@@ -75,8 +74,7 @@ data class WanListBean(
         val superChapterId: Int,
         @SerializedName("superChapterName")
         val superChapterName: String,
-        @SerializedName("tags")
-        val tags: List<Any>,
+
 
         @SerializedName("title")
         val title: String,

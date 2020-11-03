@@ -1,17 +1,15 @@
-package com.petterp.cloud.rvadapter.test.paging.activity
+package com.petterp.cloud.rvadapter.test.paging.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.ExperimentalPagingApi
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
+import androidx.paging.*
 import com.petterp.cloud.rvadapter.test.net.ApiServiceImpl
-import com.petterp.cloud.rvadapter.test.net.WanListBean
+import com.petterp.cloud.rvadapter.test.paging.PokemonEntity
 import com.petterp.cloud.rvadapter.test.paging.datasource.BookRemoteMediator
 import com.petterp.cloud.rvadapter.test.paging.db.WanDb
-import com.petterp.paging.source.ktx.CloudNetData
-import com.petterp.paging.source.ktx.createIndexPagingSource
-import com.petterp.paging.source.ktx.createPager
+import com.petterp.paging.source.ext.StatusRvData
+import com.petterp.paging.source.ext.createIndexPagingSource
+import com.petterp.paging.source.ext.createPager
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -20,30 +18,33 @@ import kotlinx.coroutines.flow.Flow
  * @Email ShiyihuiCloud@163.com
  * @Function pagingViewModel
  */
+@OptIn(ExperimentalPagingApi::class)
 class PagingViewModel : ViewModel() {
 
     val api = ApiServiceImpl.apiService
 
     /** 初始化 */
-    fun initList(): Flow<PagingData<WanListBean.Data>> =
+    fun initList(): Flow<PagingData<PokemonEntity>> =
         //创建Pager
-        createPager {
+        createPager{
             //创建数据源
-            createIndexPagingSource<WanListBean.Data> {
+            createIndexPagingSource<PokemonEntity> { it ->
                 try {
-                    CloudNetData.Success(api.getMainList(it).data.datas)
+                    StatusRvData.Success(api.getMainList(it).data.datas.map {
+                        PokemonEntity(it.id.toString(), it.title)
+                    })
                 } catch (e: Exception) {
-                    CloudNetData.Error(e)
+                    StatusRvData.Error(e)
                 }
             }
-            // TODO: 2020/10/30 [cachedIn] 缓存数据，保证PagingData的相同
+            // TODO: 2020/10/30 [cachedIn] 缓存数据，保证生命周期切换情况下，数据的完整性
         }.flow.cachedIn(viewModelScope)
 
 
-    @ExperimentalPagingApi
-    fun initNetToLocal(): Flow<PagingData<WanListBean.Data>> =
+    fun initNetToLocal(): Flow<PagingData<PokemonEntity>> =
         createPager(remoteMediator = BookRemoteMediator()) {
             WanDb.dao.wanDao().queryPage()
         }.flow.cachedIn(viewModelScope)
+
 
 }
