@@ -1,27 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.petterp.cloud.rvadapter">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.cloud.adapter.rvadapter">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:name=".test.KtxApplication"
+        android:name="com.cloud.adapter.KtxApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity android:name=".test.MainActivity">
+        android:theme="@style/AppTheme"
+        tools:ignore="AllowBackup">
+        <activity android:name="com.cloud.adapter.ui.activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".test.routine.activity.AdapterActivity" />
-        <activity android:name=".test.routine.activity.AdapterMultiltemActivity" />
-        <activity android:name=".test.paging.activity.PagingActivity" />
-        <activity android:name=".test.paging.activity.PagingNetToLocalActivity" />
+        <activity android:name="com.cloud.adapter.ui.activity.BookActivity" />
+        <activity android:name="com.cloud.adapter.ui.activity.BookMultiltemActivity" />
+        <activity android:name="com.cloud.adapter.ui.activity.WanPagingActivity" />
+        <activity android:name="com.cloud.adapter.ui.activity.WanPagingLocalActivity" />
     </application>
 
 </manifest>
