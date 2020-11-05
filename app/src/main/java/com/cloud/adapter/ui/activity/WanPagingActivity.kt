@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.cloud.adapter.rvadapter.R
 import com.cloud.adapter.ui.adapter.PagingWanAdapter
 import com.cloud.adapter.data.viewmodel.WanPagingViewModel
+import com.cloud.adapter.ui.loadstate.WanPagingLoadStateAdapter
 import kotlinx.android.synthetic.main.activity_adater.*
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
@@ -28,13 +29,18 @@ class WanPagingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_adater)
         val adapter = PagingWanAdapter()
-        rvMain.adapter = adapter
         rvMain.layoutManager = LinearLayoutManager(this)
+        rvMain.adapter = adapter.withLoadStateFooter(WanPagingLoadStateAdapter {
+
+        })
+
         lifecycleScope.launch {
             viewModel.netPager().collectLatest {
                 adapter.submitData(it)
             }
         }
+
+
     }
 
 }

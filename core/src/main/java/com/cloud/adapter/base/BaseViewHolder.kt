@@ -18,7 +18,9 @@ import androidx.recyclerview.widget.RecyclerView
 @Keep
 open class BaseViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
-    private val views: SparseArray<View> = SparseArray()
+    private val views by lazy {
+        SparseArray<View>()
+    }
 
     @Suppress("UNCHECKED_CAST")
     open fun <T : View> getViewOrNull(@IdRes viewId: Int): T? {

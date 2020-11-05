@@ -1,7 +1,6 @@
 package com.cloud.adapter.base
 
 import android.annotation.SuppressLint
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.IdRes
@@ -12,10 +11,8 @@ import com.cloud.adapter.base.listener.OnItemChildClickListener
 import com.cloud.adapter.base.listener.OnItemChildLongClickListener
 import com.cloud.adapter.base.listener.OnItemClickListener
 import com.cloud.adapter.base.listener.OnItemLongClickListener
-import java.lang.reflect.Constructor
-import java.lang.reflect.InvocationTargetException
-import java.lang.reflect.Modifier
-import java.lang.reflect.ParameterizedType
+import com.cloud.adapter.expand.IAdapterExt
+import com.cloud.adapter.expand.getItemView
 import java.util.LinkedHashSet
 
 /**
@@ -31,7 +28,7 @@ abstract class BaseQuickAdapter<T : Any, VH : BaseViewHolder>
 @JvmOverloads constructor(
     @LayoutRes private val layoutResId: Int, data: MutableList<T>? = null
 ) :
-    RecyclerView.Adapter<VH>() {
+    RecyclerView.Adapter<VH>(),IAdapterExt {
 
     var data: MutableList<T> = data ?: arrayListOf()
         internal set
@@ -64,97 +61,6 @@ abstract class BaseQuickAdapter<T : Any, VH : BaseViewHolder>
         return layoutResId
     }
 
-
-    /**
-     * 创建 ViewHolder。可以重写
-     *
-     * @param view View
-     * @return VH
-     */
-    @Suppress("UNCHECKED_CAST")
-    protected open fun createBaseViewHolder(view: View): VH {
-        var temp: Class<*>? = javaClass
-        var z: Class<*>? = null
-        while (z == null && null != temp) {
-            z = getInstancedGenericKClass(temp)
-            temp = temp.superclass
-        }
-        // 泛型擦除会导致z为null
-        val vh: VH? = if (z == null) {
-            BaseViewHolder(view) as VH
-        } else {
-            createBaseGenericKInstance(z, view)
-        }
-        return vh ?: BaseViewHolder(
-            view
-        ) as VH
-    }
-
-    private fun getInstancedGenericKClass(z: Class<*>): Class<*>? {
-        try {
-            val type = z.genericSuperclass
-            if (type is ParameterizedType) {
-                val types = type.actualTypeArguments
-                for (temp in types) {
-                    if (temp is Class<*>) {
-                        if (BaseViewHolder::class.java.isAssignableFrom(temp)) {
-                            return temp
-                        }
-                    } else if (temp is ParameterizedType) {
-                        val rawType = temp.rawType
-                        if (rawType is Class<*> && BaseViewHolder::class.java.isAssignableFrom(
-                                rawType
-                            )
-                        ) {
-                            return rawType
-                        }
-                    }
-                }
-            }
-        } catch (e: java.lang.reflect.GenericSignatureFormatError) {
-            e.printStackTrace()
-        } catch (e: TypeNotPresentException) {
-            e.printStackTrace()
-        } catch (e: java.lang.reflect.MalformedParameterizedTypeException) {
-            e.printStackTrace()
-        }
-        return null
-    }
-
-    /**
-     * try to create Generic VH instance
-     *
-     * @param z
-     * @param view
-     * @return
-     */
-    @Suppress("UNCHECKED_CAST")
-    private fun createBaseGenericKInstance(z: Class<*>, view: View): VH? {
-        try {
-            val constructor: Constructor<*>
-            // inner and unstatic class
-            return if (z.isMemberClass && !Modifier.isStatic(z.modifiers)) {
-                constructor = z.getDeclaredConstructor(javaClass, View::class.java)
-                constructor.isAccessible = true
-                constructor.newInstance(this, view) as VH
-            } else {
-                constructor = z.getDeclaredConstructor(View::class.java)
-                constructor.isAccessible = true
-                constructor.newInstance(view) as VH
-            }
-        } catch (e: NoSuchMethodException) {
-            e.printStackTrace()
-        } catch (e: IllegalAccessException) {
-            e.printStackTrace()
-        } catch (e: InstantiationException) {
-            e.printStackTrace()
-        } catch (e: InvocationTargetException) {
-            e.printStackTrace()
-        }
-
-        return null
-    }
-
     override fun onBindViewHolder(holder: VH, position: Int) {
         // TODO: 2020/8/2 这里可以做一些header,footer的判断，暂时没做
         convert(holder, getItem(position))
@@ -181,7 +87,7 @@ abstract class BaseQuickAdapter<T : Any, VH : BaseViewHolder>
     protected abstract fun convert(holder: VH, item: T)
 
     /** viewType=layout */
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+    override fun `onCreateViewHolder`(parent: ViewGroup, viewType: Int): VH {
         // TODO: 2020/8/2 暂时未处理header与footer及其他情况，暂时实现单一的
         val viewHolder = onCreateDefViewHolder(parent, viewType)
         bindViewClickListener(viewHolder, viewType)
@@ -265,7 +171,7 @@ abstract class BaseQuickAdapter<T : Any, VH : BaseViewHolder>
     }
 
     protected open fun createBaseViewHolder(parent: ViewGroup, @LayoutRes layoutResId: Int): VH {
-        return createBaseViewHolder(parent.getItemView(layoutResId))
+        return createBaseViewHolder(this, parent.getItemView(layoutResId))
     }
 
     fun setItemClickListener(itemClickListener: OnItemClickListener) {
@@ -282,10 +188,5 @@ abstract class BaseQuickAdapter<T : Any, VH : BaseViewHolder>
 
     fun setItemChildLongClickListener(itemChildLongClickListener: OnItemChildLongClickListener) {
         this.mOnItemChildLongClickListener = itemChildLongClickListener
-    }
-
-    /** 作用域仅限基础类 */
-    fun ViewGroup.getItemView(@LayoutRes layoutResId: Int): View {
-        return LayoutInflater.from(this.context).inflate(layoutResId, this, false)
     }
 }

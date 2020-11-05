@@ -1,4 +1,4 @@
-package com.cloud.paging.expand
+package com.cloud.paging
 
 /**
  * @Author petterp
